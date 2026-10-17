@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1565c0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>🚗 صيانة سيارتي</title>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --text:#1a1a2e; --muted:#6b7280;
+  --primary:#1565c0; --primary-d:#0d47a1; --danger:#d32f2f; --ok:#2e7d32;
+  --warn:#f9a825; --border:#e5e7eb; --shadow:0 2px 8px rgba(0,0,0,.08);
+}
+[data-theme="dark"]{
+  --bg:#12141c; --card:#1e2230; --text:#e8eaf0; --muted:#9aa3b5;
+  --primary:#4a90e2; --primary-d:#3a78c2; --border:#2c3245; --shadow:0 2px 8px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:70px;}
+header{background:linear-gradient(135deg,var(--primary),var(--primary-d)); color:#fff; padding:14px 16px; position:sticky; top:0; z-index:10; box-shadow:var(--shadow);}
+header h1{font-size:1.15rem; display:flex; justify-content:space-between; align-items:center;}
+header select{background:rgba(255,255,255,.2); color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:8px; padding:4px 8px; font-size:.85rem; max-width:45%;}
+header select option{color:#000;}
+header .row{display:flex; gap:8px; align-items:center;}
+.icon-btn{background:rgba(255,255,255,.2); border:none; color:#fff; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:1rem;}
+main{padding:14px; max-width:700px; margin:0 auto;}
+section{display:none; animation:fade .2s;}
+section.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(6px);}to{opacity:1; transform:none;}}
+.card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:var(--shadow);}
+.card h3{font-size:.95rem; margin-bottom:10px; color:var(--primary); display:flex; align-items:center; gap:6px;}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.stat{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px; text-align:center; box-shadow:var(--shadow);}
+.stat .num{font-size:1.3rem; font-weight:bold; color:var(--primary);}
+.stat .lbl{font-size:.75rem; color:var(--muted); margin-top:4px;}
+label{font-size:.8rem; color:var(--muted); display:block; margin:8px 0 3px;}
+input,select,textarea{width:100%; padding:10px; border:1.5px solid var(--border); border-radius:10px; font-size:.95rem; background:var(--card); color:var(--text); font-family:inherit;}
+input:focus,select:focus{border-color:var(--primary); outline:none;}
+.btn{background:var(--primary); color:#fff; border:none; border-radius:10px; padding:12px; width:100%; font-size:1rem; cursor:pointer; margin-top:12px; font-weight:bold;}
+.btn:active{transform:scale(.98);}
+.btn.sec{background:var(--muted);}
+.btn.danger{background:var(--danger);}
+.item{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+.item .info{flex:1;}
+.item .t{font-weight:bold; font-size:.92rem;}
+.item .d{font-size:.78rem; color:var(--muted); margin-top:2px;}
+.item .cost{font-weight:bold; color:var(--ok); white-space:nowrap;}
+.del{background:none; border:none; color:var(--danger); font-size:1.1rem; cursor:pointer; padding:4px;}
+.badge{display:inline-block; font-size:.7rem; padding:2px 8px; border-radius:20px; font-weight:bold;}
+.b-red{background:#ffebee; color:var(--danger);}
+.b-yel{background:#fff8e1; color:#b28704;}
+.b-grn{background:#e8f5e9; color:var(--ok);}
+[data-theme="dark"] .b-red{background:#3a2124;} [data-theme="dark"] .b-yel{background:#3a3220;} [data-theme="dark"] .b-grn{background:#1f3323;}
+nav{position:fixed; bottom:0; right:0; left:0; background:var(--card); border-top:1px solid var(--border); display:flex; z-index:10;}
+nav button{flex:1; background:none; border:none; padding:8px 2px 10px; font-size:.62rem; color:var(--muted); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px;}
+nav button .ic{font-size:1.25rem;}
+nav button.active{color:var(--primary); font-weight:bold;}
+.bar-wrap{display:flex; align-items:flex-end; gap:6px; height:130px; margin-top:10px; padding:0 4px;}
+.bar{flex:1; background:linear-gradient(180deg,var(--primary),var(--primary-d)); border-radius:6px 6px 0 0; position:relative; min-height:4px; transition:height .4s;}
+.bar span{position:absolute; top:-16px; right:50%; transform:translateX(50%); font-size:.6rem; color:var(--muted); white-space:nowrap;}
+.bar-lbl{display:flex; gap:6px; margin-top:4px; font-size:.6rem; color:var(--muted); text-align:center;}
+.bar-lbl div{flex:1;}
+.empty{text-align:center; color:var(--muted); padding:24px 0; font-size:.9rem;}
+.reminder{background:linear-gradient(135deg,#fff8e1,#fffde7); border:1px solid #f0d060; border-radius:12px; padding:10px 12px; margin-bottom:8px; font-size:.85rem; display:flex; gap:8px; align-items:center;}
+[data-theme="dark"] .reminder{background:#2e2a18; border-color:#5a5225;}
+.reminder.red{background:linear-gradient(135deg,#ffebee,#fff5f5); border-color:#ef9a9a;}
+[data-theme="dark"] .reminder.red{background:#33201f; border-color:#5c3333;}
+.toast{position:fixed; bottom:80px; right:50%; transform:translateX(50%); background:#333; color:#fff; padding:10px 22px; border-radius:24px; font-size:.88rem; opacity:0; transition:.3s; z-index:99; pointer-events:none;}
+.toast.show{opacity:1;}
+h2.sec-title{font-size:1rem; margin:4px 0 10px;}
+.lang-row{display:flex; gap:8px; margin-top:10px;}
+.lang-row .btn{margin-top:0; padding:10px 4px; font-size:.9rem;}
+</style>
+</head>
+<body>
+<header>
+  <div class="row" style="justify-content:space-between; margin-bottom:8px;">
+    <h1>🚗 <span data-i18n="appName">صيانة سيارتي</span></h1>
+    <div class="row">
+      <select id="vehicleSel" onchange="switchVehicle(this.value)"></select>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- الرئيسية -->
+  <section id="home" class="active">
+    <div id="welcomeBox" style="display:none;">
+      <div class="card" id="langCard" style="display:none;">
+        <p style="text-align:center; font-size:.85rem; color:var(--muted);">🌐 اختر لغتك • Choose your language • Choisissez votre langue</p>
+        <div class="lang-row">
+          <button class="btn" onclick="setLang('ar')">العربية</button>
+          <button class="btn sec" onclick="setLang('en')">English</button>
+          <button class="btn sec" onclick="setLang('fr')">Français</button>
+        </div>
+      </div>
+      <div class="card" style="text-align:center; padding:26px 18px;">
+        <div style="font-size:3rem; margin-bottom:6px;">🚗</div>
+        <h3 style="justify-content:center; font-size:1.1rem;" data-i18n="welcome_t">أهلاً بك في "صيانة سيارتي"!</h3>
+        <p style="font-size:.85rem; color:var(--muted); margin-bottom:4px;" data-i18n="welcome_p">لنبدأ — أضف سيارتك الأولى:</p>
+        <label style="text-align:start;" data-i18n="lb_vname">اسم السيارة / الموديل</label>
+        <input type="text" id="wName" data-i18n-ph="ph_vname">
+        <label style="text-align:start;" data-i18n="lb_plate">رقم اللوحة (اختياري)</label>
+        <input type="text" id="wPlate" data-i18n-ph="ph_plate">
+        <label style="text-align:start;" data-i18n="lb_vkm">المسافة الحالية (كم)</label>
+        <input type="number" id="wKm" data-i18n-ph="ph_km">
+        <button class="btn" onclick="addFirstVehicle()" data-i18n="w_start">🚀 ابدأ الآن</button>
+      </div>
+    </div>
+    <div id="homeContent">
+    <h2 class="sec-title" data-i18n="dash_title">📊 لوحة التحكم</h2>
+    <div class="grid">
+      <div class="stat"><div class="num" id="stKm">0</div><div class="lbl" data-i18n="st_km">المسافة الحالية (كم)</div></div>
+      <div class="stat"><div class="num" id="stKmL">—</div><div class="lbl" data-i18n="st_conso">متوسط الاستهلاك (ل/100كم)</div></div>
+      <div class="stat"><div class="num" id="stFuelMonth">0</div><div class="lbl" data-i18n="st_fuel_month">وقود هذا الشهر</div></div>
+      <div class="stat"><div class="num" id="stMaint">0</div><div class="lbl" data-i18n="st_maint">عملية صيانة مسجلة</div></div>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <h3 data-i18n="rem_title">🔔 تنبيهات قريبة</h3>
+      <div id="remindersList"></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="recent_title">📝 آخر العمليات</h3>
+      <div id="recentList"></div>
+    </div>
+    </div>
+  </section>
+
+  <!-- الصيانة -->
+  <section id="maint">
+    <h2 class="sec-title" data-i18n="maint_title">🔧 سجل الصيانة</h2>
+    <div class="card">
+      <h3 data-i18n="add_op">➕ إضافة عملية</h3>
+      <label data-i18n="lb_type">النوع</label>
+      <select id="mType" onchange="toggleCustom('mType','mCustom')"></select>
+      <input type="text" id="mCustom" style="display:none; margin-top:6px;" data-i18n-ph="ph_custom" placeholder="✍️ اكتب ما تم تغييره...">
+      <label data-i18n="lb_date">التاريخ</label><input type="date" id="mDate">
+      <label data-i18n="lb_km">عداد المسافة (كم)</label><input type="number" id="mKm" data-i18n-ph="ph_km">
+      <label data-i18n="lb_cost">التكلفة</label><input type="number" id="mCost" data-i18n-ph="ph_cost">
+      <label data-i18n="lb_notes">ملاحظات (اختياري)</label><input type="text" id="mNote">
+      <button class="btn" onclick="addMaint()" data-i18n="btn_save">💾 حفظ</button>
+    </div>
+    <div id="maintList"></div>
+  </section>
+
+  <!-- الوقود -->
+  <section id="fuel">
+    <h2 class="sec-title" data-i18n="fuel_title">⛽ سجل الوقود</h2>
+    <div class="card">
+      <h3 data-i18n="add_op">➕ إضافة عملية</h3>
+      <label data-i18n="lb_date">التاريخ</label><input type="date" id="fDate">
+      <label data-i18n="lb_km">عداد المسافة (كم)</label><input type="number" id="fKm" data-i18n-ph="ph_km">
+      <label data-i18n="lb_liters">عدد اللترات</label><input type="number" step="0.01" id="fLiters" data-i18n-ph="ph_liters">
+      <label data-i18n="lb_total">المبلغ الإجمالي</label><input type="number" step="0.01" id="fCost" data-i18n-ph="ph_cost">
+      <button class="btn" onclick="addFuel()" data-i18n="btn_save">💾 حفظ</button>
+    </div>
+    <div id="fuelList"></div>
+  </section>
+
+  <!-- القطع -->
+  <section id="parts">
+    <h2 class="sec-title" data-i18n="parts_title">🔩 سجل القطع</h2>
+    <div class="card">
+      <h3 data-i18n="add_op">➕ إضافة عملية</h3>
+      <label data-i18n="lb_part_name">اسم القطعة</label><input type="text" id="pName" data-i18n-ph="ph_part">
+      <label data-i18n="lb_date">التاريخ</label><input type="date" id="pDate">
+      <label data-i18n="lb_cost">الثمن</label><input type="number" id="pCost" data-i18n-ph="ph_cost">
+      <label data-i18n="lb_notes">ملاحظات (اختياري)</label><input type="text" id="pNote">
+      <button class="btn" onclick="addPart()" data-i18n="btn_save">💾 حفظ</button>
+    </div>
+    <div id="partsList"></div>
+  </section>
+
+  <!-- الوثائق -->
+  <section id="docs">
+    <h2 class="sec-title" data-i18n="docs_title">📄 الوثائق والتجديدات</h2>
+    <div class="card">
+      <h3 data-i18n="add_op">➕ إضافة عملية</h3>
+      <label data-i18n="lb_doctype">نوع الوثيقة</label>
+      <select id="dType" onchange="toggleCustom('dType','dCustom')"></select>
+      <input type="text" id="dCustom" style="display:none; margin-top:6px;" data-i18n-ph="ph_custom" placeholder="✍️ اكتب نوع الوثيقة...">
+      <label data-i18n="lb_start">تاريخ التجديد</label><input type="date" id="dStart">
+      <label data-i18n="lb_end">تاريخ الانتهاء</label><input type="date" id="dEnd">
+      <label data-i18n="lb_cost">التكلفة</label><input type="number" id="dCost" data-i18n-ph="ph_cost">
+      <button class="btn" onclick="addDoc()" data-i18n="btn_save">💾 حفظ</button>
+    </div>
+    <div id="docsList"></div>
+  </section>
+
+  <!-- التقارير -->
+  <section id="reports">
+    <h2 class="sec-title" data-i18n="rep_title">📈 التقارير</h2>
+    <div class="card">
+      <h3 data-i18n="fuel_chart_t">💰 مصاريف الوقود الشهرية</h3>
+      <div id="fuelChart"></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="maint_chart_t">🔧 مصاريف الصيانة والقطع</h3>
+      <div id="maintChart"></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="year_t">📋 ملخص السنة الحالية</h3>
+      <div id="yearSummary"></div>
+    </div>
+  </section>
+
+  <!-- الإعدادات -->
+  <section id="settings">
+    <h2 class="sec-title" data-i18n="set_title">⚙️ الإعدادات</h2>
+    <div class="card">
+      <h3 data-i18n="lang_t">🌐 اللغة</h3>
+      <select id="langSel" onchange="setLang(this.value)">
+        <option value="ar">العربية</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+      </select>
+    </div>
+    <div class="card">
+      <h3 data-i18n="mycar_t">🚙 سيارتي</h3>
+      <div id="vehicleInfo"></div>
+      <label data-i18n="lb_vkm">المسافة الحالية (كم)</label><input type="number" id="vKm">
+      <button class="btn" onclick="updateKm()" data-i18n="upd_km">💾 تحديث المسافة</button>
+    </div>
+    <div class="card">
+      <h3 data-i18n="add_v_t">➕ إضافة سيارة أخرى</h3>
+      <label data-i18n="lb_vname">الاسم / الموديل</label><input type="text" id="nvName" data-i18n-ph="ph_vname">
+      <label data-i18n="lb_plate">رقم اللوحة (اختياري)</label><input type="text" id="nvPlate" data-i18n-ph="ph_plate">
+      <label data-i18n="lb_vkm">المسافة الحالية (كم)</label><input type="number" id="nvKm" data-i18n-ph="ph_km">
+      <button class="btn" onclick="addVehicle()" data-i18n="add_v_btn">💾 إضافة</button>
+    </div>
+    <div class="card">
+      <h3 data-i18n="cur_t">💵 العملة</h3>
+      <label data-i18n="cur_lb">اختر عملتك — ستظهر بجانب كل الأثمنة</label>
+      <select id="curSel" onchange="setCurrency(this.value)">
+        <option value="">—</option>
+        <option>درهم</option><option>دينار</option><option>د.ج</option>
+        <option>ر.س</option><option>ريال</option><option>جنيه</option>
+        <option>د.ك</option><option>د.إ</option><option>ر.ق</option>
+        <option>$</option><option>€</option><option>£</option>
+      </select>
+    </div>
+    <div class="card">
+      <h3 data-i18n="backup_t">💾 النسخ الاحتياطي</h3>
+      <button class="btn sec" onclick="exportData()" data-i18n="exp">📤 تصدير البيانات</button>
+      <button class="btn sec" onclick="document.getElementById('importFile').click()" data-i18n="imp">📥 استيراد بيانات</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn danger" onclick="clearAll()" style="margin-top:8px;" data-i18n="clear_all">🗑️ حذف جميع البيانات</button>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="active" onclick="go('home',this)"><span class="ic">🏠</span><span data-i18n="nav_home">الرئيسية</span></button>
+  <button onclick="go('maint',this)"><span class="ic">🔧</span><span data-i18n="nav_maint">الصيانة</span></button>
+  <button onclick="go('fuel',this)"><span class="ic">⛽</span><span data-i18n="nav_fuel">الوقود</span></button>
+  <button onclick="go('parts',this)"><span class="ic">🔩</span><span data-i18n="nav_parts">القطع</span></button>
+  <button onclick="go('docs',this)"><span class="ic">📄</span><span data-i18n="nav_docs">الوثائق</span></button>
+  <button onclick="go('reports',this)"><span class="ic">📈</span><span data-i18n="nav_reports">التقارير</span></button>
+  <button onclick="go('settings',this)"><span class="ic">⚙️</span><span data-i18n="nav_settings">الإعدادات</span></button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== اللغات ======
+const STR = {
+ar:{
+ appName:"صيانة سيارتي", nav_home:"الرئيسية", nav_maint:"الصيانة", nav_fuel:"الوقود", nav_parts:"القطع",
+ nav_docs:"الوثائق", nav_reports:"التقارير", nav_settings:"الإعدادات",
+ dash_title:"📊 لوحة التحكم", st_km:"المسافة الحالية (كم)", st_conso:"متوسط الاستهلاك (ل/100كم)",
+ st_fuel_month:"وقود هذا الشهر", st_maint:"عملية صيانة مسجلة", rem_title:"🔔 تنبيهات قريبة",
+ recent_title:"📝 آخر العمليات", empty_rem:"لا توجد تنبيهات 🎉", empty_recent:"لا توجد عمليات بعد",
+ maint_title:"🔧 سجل الصيانة", fuel_title:"⛽ سجل الوقود", parts_title:"🔩 سجل القطع",
+ docs_title:"📄 الوثائق والتجديدات", rep_title:"📈 التقارير", set_title:"⚙️ الإعدادات",
+ add_op:"➕ إضافة عملية", lb_type:"النوع", lb_date:"التاريخ", lb_km:"عداد المسافة (كم)",
+ lb_cost:"التكلفة", lb_notes:"ملاحظات (اختياري)", lb_liters:"عدد اللترات", lb_total:"المبلغ الإجمالي",
+ lb_part_name:"اسم القطعة", lb_doctype:"نوع الوثيقة", lb_start:"تاريخ التجديد", lb_end:"تاريخ الانتهاء",
+ btn_save:"💾 حفظ", fuel_chart_t:"💰 مصاريف الوقود الشهرية", maint_chart_t:"🔧 مصاريف الصيانة والقطع",
+ year_t:"📋 ملخص السنة الحالية", lang_t:"🌐 اللغة", mycar_t:"🚙 سيارتي", upd_km:"💾 تحديث المسافة",
+ add_v_t:"➕ إضافة سيارة أخرى", add_v_btn:"💾 إضافة", lb_vname:"الاسم / الموديل", lb_plate:"رقم اللوحة (اختياري)",
+ lb_vkm:"المسافة الحالية (كم)", cur_t:"💵 العملة", cur_lb:"اختر عملتك — ستظهر بجانب كل الأثمنة",
+ backup_t:"💾 النسخ الاحتياطي", exp:"📤 تصدير البيانات", imp:"📥 استيراد بيانات", clear_all:"🗑️ حذف جميع البيانات",
+ welcome_t:'أهلاً بك في "صيانة سيارتي"!', welcome_p:"لنبدأ — أضف سيارتك الأولى:", w_start:"🚀 ابدأ الآن",
+ ph_vname:"مثال: داسيا لوغان 2020", ph_plate:"مثال: أ 12345", ph_km:"مثال: 45000", ph_cost:"0",
+ ph_liters:"مثال: 35", ph_part:"مثال: فلتر الهواء", ph_custom:"✍️ اكتب النوع يدوياً...",
+ empty_maint:"لا توجد عمليات صيانة", empty_fuel:"لا توجد تعبئات وقود", empty_parts:"لا توجد قطع مسجلة", empty_docs:"لا توجد وثائق",
+ per_liter:"/لتر", total:"المجموع",
+ t_need_date:"⚠️ أدخل التاريخ", t_need_fields:"⚠️ أكمل الحقول المطلوبة", t_saved:"✅ تم الحفظ",
+ t_added:"✅ تمت إضافة السيارة", t_km_upd:"✅ تم التحديث", t_cur:"💵 تم تحديد العملة", t_lang:"🌐 تم تغيير اللغة",
+ t_exp:"📤 تم التنزيل", t_imp_ok:"✅ تم الاستيراد", t_imp_bad:"❌ ملف غير صالح", t_del:"🗑️ تم الحذف",
+ t_need_vname:"⚠️ أدخل اسم السيارة", t_started:"🎉 تمت الإضافة! استكشف التطبيق من الأسفل",
+ confirm_clear:"⚠️ سيتم حذف جميع البيانات نهائياً! هل أنت متأكد؟",
+ b_expired:"منتهية منذ {n} يوم!", b_days1:"تنتهي خلال {n} يوم", b_days2:"تنتهي خلال {n} يوم", b_valid:"صالحة ({n} يوم)",
+ rem_over_km:"تجاوزت الموعد (بمسافة {n} كم)", rem_over_d:"تجاوزت الموعد (بـ {n} يوم)",
+ rem_soon:"اقترب موعد", rem_left:"متبقي", km_or:"أو", doc_renew:"منتهية! جددها الآن",
+ fuel_w:"وقود", maint_w:"صيانة", parts_w:"قطع", docs_w:"وثائق", fuel_one:"⛽ وقود"
+},
+fr:{
+ appName:"Ma Voiture", nav_home:"Accueil", nav_maint:"Entretien", nav_fuel:"Carburant", nav_parts:"Pièces",
+ nav_docs:"Documents", nav_reports:"Rapports", nav_settings:"Réglages",
+ dash_title:"📊 Tableau de bord", st_km:"Distance actuelle (km)", st_conso:"Conso. moyenne (L/100km)",
+ st_fuel_month:"Carburant ce mois", st_maint:"Entretiens enregistrés", rem_title:"🔔 Alertes proches",
+ recent_title:"📝 Dernières opérations", empty_rem:"Aucune alerte 🎉", empty_recent:"Aucune opération",
+ maint_title:"🔧 Historique d'entretien", fuel_title:"⛽ Suivi du carburant", parts_title:"🔩 Pièces remplacées",
+ docs_title:"📄 Documents et échéances", rep_title:"📈 Rapports", set_title:"⚙️ Réglages",
+ add_op:"➕ Ajouter une opération", lb_type:"Type", lb_date:"Date", lb_km:"Compteur (km)",
+ lb_cost:"Coût", lb_notes:"Notes (optionnel)", lb_liters:"Nombre de litres", lb_total:"Montant total",
+ lb_part_name:"Nom de la pièce", lb_doctype:"Type de document", lb_start:"Date de délivrance", lb_end:"Date d'expiration",
+ btn_save:"💾 Enregistrer", fuel_chart_t:"💰 Dépenses carburant par mois", maint_chart_t:"🔧 Dépenses entretien et pièces",
+ year_t:"📋 Résumé de l'année en cours", lang_t:"🌐 Langue", mycar_t:"🚙 Ma voiture", upd_km:"💾 Mettre à jour le compteur",
+ add_v_t:"➕ Ajouter un autre véhicule", add_v_btn:"💾 Ajouter", lb_vname:"Nom / Modèle", lb_plate:"Plaque (optionnel)",
+ lb_vkm:"Compteur actuel (km)", cur_t:"💵 Devise", cur_lb:"Choisissez votre devise — affichée à côté de tous les prix",
+ backup_t:"💾 Sauvegarde", exp:"📤 Exporter les données", imp:"📥 Importer des données", clear_all:"🗑️ Tout supprimer",
+ welcome_t:'Bienvenue dans "Ma Voiture" !', welcome_p:"Commençons — ajoutez votre premier véhicule :", w_start:"🚀 Commencer",
+ ph_vname:"Ex : Dacia Logan 2020", ph_plate:"Ex : 12345-A-6", ph_km:"Ex : 45000", ph_cost:"0",
+ ph_liters:"Ex : 35", ph_part:"Ex : Filtre à air", ph_custom:"✍️ Écrivez le type...",
+ empty_maint:"Aucun entretien", empty_fuel:"Aucun plein enregistré", empty_parts:"Aucune pièce enregistrée", empty_docs:"Aucun document",
+ per_liter:"/L", total:"Total",
+ t_need_date:"⚠️ Entrez la date", t_need_fields:"⚠️ Remplissez les champs requis", t_saved:"✅ Enregistré",
+ t_added:"✅ Véhicule ajouté", t_km_upd:"✅ Mis à jour", t_cur:"💵 Devise définie", t_lang:"🌐 Langue modifiée",
+ t_exp:"📤 Téléchargé", t_imp_ok:"✅ Import réussi", t_imp_bad:"❌ Fichier invalide", t_del:"🗑️ Supprimé",
+ t_need_vname:"⚠️ Entrez le nom du véhicule", t_started:"🎉 Ajouté ! Explorez l'app ci-dessous",
+ confirm_clear:"⚠️ Toutes les données seront définitivement supprimées ! Continuer ?",
+ b_expired:"Expirée depuis {n} jours !", b_days1:"Expire dans {n} jours", b_days2:"Expire dans {n} jours", b_valid:"Valide ({n} jours)",
+ rem_over_km:"échéance dépassée ({n} km)", rem_over_d:"échéance dépassée ({n} jours)",
+ rem_soon:"Échéance proche :", rem_left:"reste", km_or:"ou", doc_renew:"Expiré ! Renouvelez-le",
+ fuel_w:"Carburant", maint_w:"Entretien", parts_w:"Pièces", docs_w:"Documents", fuel_one:"⛽ Carburant"
+},
+en:{
+ appName:"My Car Care", nav_home:"Home", nav_maint:"Maintenance", nav_fuel:"Fuel", nav_parts:"Parts",
+ nav_docs:"Documents", nav_reports:"Reports", nav_settings:"Settings",
+ dash_title:"📊 Dashboard", st_km:"Current mileage (km)", st_conso:"Avg. consumption (L/100km)",
+ st_fuel_month:"Fuel this month", st_maint:"Maintenance records", rem_title:"🔔 Upcoming alerts",
+ recent_title:"📝 Recent activity", empty_rem:"No alerts 🎉", empty_recent:"No activity yet",
+ maint_title:"🔧 Maintenance log", fuel_title:"⛽ Fuel log", parts_title:"🔩 Parts log",
+ docs_title:"📄 Documents & renewals", rep_title:"📈 Reports", set_title:"⚙️ Settings",
+ add_op:"➕ Add entry", lb_type:"Type", lb_date:"Date", lb_km:"Odometer (km)",
+ lb_cost:"Cost", lb_notes:"Notes (optional)", lb_liters:"Liters", lb_total:"Total amount",
+ lb_part_name:"Part name", lb_doctype:"Document type", lb_start:"Issue date", lb_end:"Expiry date",
+ btn_save:"💾 Save", fuel_chart_t:"💰 Monthly fuel expenses", maint_chart_t:"🔧 Maintenance & parts expenses",
+ year_t:"📋 Current year summary", lang_t:"🌐 Language", mycar_t:"🚙 My car", upd_km:"💾 Update mileage",
+ add_v_t:"➕ Add another vehicle", add_v_btn:"💾 Add", lb_vname:"Name / Model", lb_plate:"Plate no. (optional)",
+ lb_vkm:"Current mileage (km)", cur_t:"💵 Currency", cur_lb:"Choose your currency — shown next to all prices",
+ backup_t:"💾 Backup", exp:"📤 Export data", imp:"📥 Import data", clear_all:"🗑️ Delete all data",
+ welcome_t:'Welcome to "My Car Care"!', welcome_p:"Let's start — add your first vehicle:", w_start:"🚀 Start now",
+ ph_vname:"E.g. Dacia Logan 2020", ph_plate:"E.g. 12345-A-6", ph_km:"E.g. 45000", ph_cost:"0",
+ ph_liters:"E.g. 35", ph_part:"E.g. Air filter", ph_custom:"✍️ Type it manually...",
+ empty_maint:"No maintenance records", empty_fuel:"No fuel entries", empty_parts:"No parts recorded", empty_docs:"No documents",
+ per_liter:"/L", total:"Total",
+ t_need_date:"⚠️ Enter the date", t_need_fields:"⚠️ Fill in the required fields", t_saved:"✅ Saved",
+ t_added:"✅ Vehicle added", t_km_upd:"✅ Updated", t_cur:"💵 Currency set", t_lang:"🌐 Language changed",
+ t_exp:"📤 Downloaded", t_imp_ok:"✅ Import successful", t_imp_bad:"❌ Invalid file", t_del:"🗑️ Deleted",
+ t_need_vname:"⚠️ Enter the vehicle name", t_started:"🎉 Added! Explore the app below",
+ confirm_clear:"⚠️ All data will be permanently deleted! Continue?",
+ b_expired:"Expired {n} days ago!", b_days1:"Expires in {n} days", b_days2:"Expires in {n} days", b_valid:"Valid ({n} days)",
+ rem_over_km:"overdue ({n} km)", rem_over_d:"overdue ({n} days)",
+ rem_soon:"Due soon:", rem_left:"left", km_or:"or", doc_renew:"Expired! Renew it now",
+ fuel_w:"Fuel", maint_w:"Maint.", parts_w:"Parts", docs_w:"Docs", fuel_one:"⛽ Fuel"
+}};
+const LOCALE = {ar:"ar-MA", fr:"fr-FR", en:"en-GB"};
+let lang = localStorage.getItem("cc_lang") || "";
+function t(k){ return (STR[lang]||STR.ar)[k] ?? STR.ar[k] ?? k; }
+function tp(k,n){ return t(k).replace("{n}", n); }
+function setLang(l){
+  lang=l; localStorage.setItem("cc_lang",l);
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==="ar" ? "rtl" : "ltr";
+  document.getElementById("langSel").value = l;
+  document.getElementById("langCard").style.display = "none";
+  applyLang(); render();
+  toast(t("t_lang"));
+}
+function applyLang(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>el.placeholder=t(el.dataset.i18nPh));
+  document.title = "🚗 " + t("appName");
+  fillTypeSelect(); fillDocSelect();
+}
+
+// ====== أنواع الصيانة ======
+const TYPES = {
+  oil:{ar:"تغيير الزيت", fr:"Vidange d'huile", en:"Oil change", km:5000, days:180, ic:"🛢️"},
+  oil_filter:{ar:"فلتر الزيت", fr:"Filtre à huile", en:"Oil filter", km:10000, days:365, ic:"⚙️"},
+  air_filter:{ar:"فلتر الهواء", fr:"Filtre à air", en:"Air filter", km:10000, days:365, ic:"💨"},
+  fuel_filter:{ar:"فلتر الوقود", fr:"Filtre à carburant", en:"Fuel filter", km:20000, days:365, ic:"⛽"},
+  ac_filter:{ar:"فلتر مكيف الهواء", fr:"Filtre clim.", en:"AC filter", km:15000, days:365, ic:"❄️"},
+  coolant:{ar:"تغيير ماء التبريد", fr:"Liquide refroid.", en:"Coolant change", km:40000, days:730, ic:"💧"},
+  brakes:{ar:"فرامل (plaquettes)", fr:"Freins", en:"Brake pads", km:20000, days:365, ic:"🛑"},
+  tires:{ar:"إطارات", fr:"Pneus", en:"Tires", km:30000, days:730, ic:"🛞"},
+  spark_plugs:{ar:"شمعات الإشعال", fr:"Bougies", en:"Spark plugs", km:30000, days:730, ic:"⚡"},
+  other:{ar:"أخرى", fr:"Autre", en:"Other", km:0, days:0, ic:"🔧"},
+};
+const AR2TYPE = {}; Object.entries(TYPES).forEach(([k,v])=>AR2TYPE[v.ar]=k);
+const DOCS = {
+  insurance:{ar:"🛡️ التأمين", fr:"🛡️ Assurance", en:"🛡️ Insurance"},
+  tech:{ar:"🔍 الفحص التقني", fr:"🔍 Contrôle technique", en:"🔍 Tech. inspection"},
+  license:{ar:"🪪 رخصة السياقة", fr:"🪪 Permis", en:"🪪 License"},
+  reg:{ar:"📋 بطاقة رمادية", fr:"📋 Carte grise", en:"📋 Registration"},
+  vignette:{ar:"🏷️ الملصق الجبائي", fr:"🏷️ Vignette", en:"🏷️ Road tax"},
+  other:{ar:"أخرى", fr:"Autre", en:"Other"},
+};
+const AR2DOC = {"🛡️ التأمين":"insurance","🔍 الفحص التقني":"tech","🪪 رخصة السياقة":"license","📋 بطاقة رمادية":"reg","🏷️ الملصق الجبائي (vignette)":"vignette","أخرى":"other"};
+const KEYS = {vehicles:"cc_vehicles", data:"cc_data", theme:"cc_theme", currency:"cc_currency"};
+let currency = localStorage.getItem(KEYS.currency) || "";
+function setCurrency(c){ currency=c; localStorage.setItem(KEYS.currency,c); toast(t("t_cur")); render(); }
+
+let vehicles = JSON.parse(localStorage.getItem(KEYS.vehicles)||"[]");
+let data = JSON.parse(localStorage.getItem(KEYS.data)||"{}");
+// ترحيل البيانات القديمة (أسماء عربية ← مفاتيح)
+Object.values(data).forEach(d=>{
+  (d.maint||[]).forEach(m=>{ if(!TYPES[m.type]) m.type = AR2TYPE[m.type] || "other"; });
+  (d.docs||[]).forEach(x=>{ if(!DOCS[x.type]) x.type = AR2DOC[x.type] || "other"; });
+});
+let activeId = vehicles.length? vehicles[0].id : null;
+
+function save(){ localStorage.setItem(KEYS.vehicles, JSON.stringify(vehicles)); localStorage.setItem(KEYS.data, JSON.stringify(data)); }
+function D(){ if(!data[activeId]) data[activeId]={maint:[],fuel:[],parts:[],docs:[]}; return data[activeId]; }
+function today(){ return new Date().toISOString().slice(0,10); }
+function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1800); }
+function loc(){ return LOCALE[lang]||"ar-MA"; }
+function money(n){ const v=(Number(n)||0).toLocaleString(loc()); return currency? v+" "+currency : v; }
+function fmtDate(d){ if(!d) return ""; return new Date(d+"T00:00:00").toLocaleDateString(loc(),{day:"numeric",month:"short",year:"numeric"}); }
+function daysBetween(a,b){ return Math.floor((new Date(b)-new Date(a))/86400000); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function typeLabel(k){ return TYPES[k]? TYPES[k][lang]||TYPES[k].ar : k; }
+function docLabel(k){ return DOCS[k]? DOCS[k][lang]||DOCS[k].ar : k; }
+function toggleCustom(selId, inpId){
+  const show = document.getElementById(selId).value === "other";
+  const inp = document.getElementById(inpId);
+  inp.style.display = show? "block":"none";
+  if(show) inp.focus();
+}
+function entryTypeLabel(m){ return (m.type==="other" && m.custom)? m.custom : typeLabel(m.type); }
+function entryDocLabel(d){ return (d.type==="other" && d.custom)? d.custom : docLabel(d.type); }
+function fillTypeSelect(){ document.getElementById("mType").innerHTML = Object.keys(TYPES).map(k=>`<option value="${k}">${esc(typeLabel(k))}</option>`).join(""); }
+function fillDocSelect(){ document.getElementById("dType").innerHTML = Object.keys(DOCS).map(k=>`<option value="${k}">${esc(docLabel(k))}</option>`).join(""); }
+
+function go(id,btn){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  render();
+  window.scrollTo(0,0);
+}
+
+// ====== السيارات ======
+function addVehicle(){
+  const name=document.getElementById("nvName").value.trim();
+  if(!name) return toast(t("t_need_vname"));
+  const v={id:Date.now(), name, plate:document.getElementById("nvPlate").value.trim(), km:Number(document.getElementById("nvKm").value)||0};
+  vehicles.push(v); activeId=v.id; save();
+  document.getElementById("nvName").value=""; document.getElementById("nvPlate").value=""; document.getElementById("nvKm").value="";
+  toast(t("t_added")); renderVehicleSel(); render();
+}
+function addFirstVehicle(){
+  const name=document.getElementById("wName").value.trim();
+  if(!name) return toast(t("t_need_vname"));
+  const v={id:Date.now(), name, plate:document.getElementById("wPlate").value.trim(), km:Number(document.getElementById("wKm").value)||0};
+  vehicles.push(v); activeId=v.id; save();
+  toast(t("t_started")); renderVehicleSel(); render();
+}
+function switchVehicle(id){ activeId=Number(id); render(); }
+function updateKm(){
+  const v=vehicles.find(x=>x.id===activeId); if(!v) return;
+  v.km=Number(document.getElementById("vKm").value)||v.km; save(); toast(t("t_km_upd")); render();
+}
+function renderVehicleSel(){
+  const sel=document.getElementById("vehicleSel");
+  sel.innerHTML = vehicles.map(v=>`<option value="${v.id}" ${v.id===activeId?"selected":""}>${esc(v.name)}</option>`).join("");
+  const v=vehicles.find(x=>x.id===activeId);
+  document.getElementById("vehicleInfo").innerHTML = v? `<p style="font-size:.9rem; margin-bottom:6px;">🚙 ${esc(v.name)}${v.plate? " • "+esc(v.plate):""}</p>`:"";
+  document.getElementById("vKm").value = v? v.km : "";
+}
+
+// ====== الصيانة ======
+function addMaint(){
+  const type=document.getElementById("mType").value;
+  const date=document.getElementById("mDate").value;
+  if(!date) return toast(t("t_need_date"));
+  const km=Number(document.getElementById("mKm").value);
+  const custom = type==="other"? document.getElementById("mCustom").value.trim() : "";
+  D().maint.unshift({id:Date.now(), type, custom, date, km, cost:Number(document.getElementById("mCost").value)||0, note:document.getElementById("mNote").value.trim()});
+  const v=vehicles.find(x=>x.id===activeId); if(v&&km>v.km){v.km=km;}
+  document.getElementById("mCost").value=""; document.getElementById("mNote").value=""; document.getElementById("mKm").value="";
+  save(); toast(t("t_saved")); render();
+}
+function renderMaint(){
+  const list=D().maint;
+  document.getElementById("maintList").innerHTML = list.length? list.map(m=>{
+    const cfg=TYPES[m.type]||TYPES.other;
+    return `<div class="item"><div class="info">
+      <div class="t">${cfg.ic} ${esc(entryTypeLabel(m))}</div>
+      <div class="d">${fmtDate(m.date)}${m.km? " • "+m.km.toLocaleString(loc())+" km":""}${m.note? " • "+esc(m.note):""}</div>
+    </div><div class="cost">${money(m.cost)}</div>
+    <button class="del" onclick="delItem('maint',${m.id})">🗑️</button></div>`;
+  }).join("") : `<div class="empty">${t("empty_maint")}</div>`;
+}
+
+// ====== الوقود ======
+function addFuel(){
+  const date=document.getElementById("fDate").value, km=Number(document.getElementById("fKm").value), L=Number(document.getElementById("fLiters").value), cost=Number(document.getElementById("fCost").value);
+  if(!date||!L||!cost) return toast(t("t_need_fields"));
+  D().fuel.unshift({id:Date.now(), date, km, liters:L, cost});
+  D().fuel.sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const v=vehicles.find(x=>x.id===activeId); if(v&&km>v.km){v.km=km;}
+  document.getElementById("fLiters").value=""; document.getElementById("fCost").value=""; document.getElementById("fKm").value="";
+  save(); toast(t("t_saved")); render();
+}
+function renderFuel(){
+  const list=[...D().fuel].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("fuelList").innerHTML = list.length? list.map(f=>
+    `<div class="item"><div class="info">
+      <div class="t">⛽ ${f.liters} L</div>
+      <div class="d">${fmtDate(f.date)}${f.km? " • "+f.km.toLocaleString(loc())+" km":""} • ${(f.cost/f.liters).toFixed(2)} ${t("per_liter")}</div>
+    </div><div class="cost">${money(f.cost)}</div>
+    <button class="del" onclick="delItem('fuel',${f.id})">🗑️</button></div>`).join("") : `<div class="empty">${t("empty_fuel")}</div>`;
+}
+function consumption(){
+  const f=[...D().fuel].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(f.length<2) return null;
+  let totalL=0, totalKm=0;
+  for(let i=1;i<f.length;i++){
+    if(f[i].km&&f[i-1].km&&f[i].km>f[i-1].km){ totalL+=f[i].liters; totalKm+=f[i].km-f[i-1].km; }
+  }
+  return totalKm>0? (totalL/totalKm*100) : null;
+}
+
+// ====== القطع ======
+function addPart(){
+  const name=document.getElementById("pName").value.trim(), date=document.getElementById("pDate").value;
+  if(!name||!date) return toast(t("t_need_fields"));
+  D().parts.unshift({id:Date.now(), name, date, cost:Number(document.getElementById("pCost").value)||0, note:document.getElementById("pNote").value.trim()});
+  document.getElementById("pName").value=""; document.getElementById("pCost").value=""; document.getElementById("pNote").value="";
+  save(); toast(t("t_saved")); render();
+}
+function renderParts(){
+  const list=D().parts;
+  document.getElementById("partsList").innerHTML = list.length? list.map(p=>
+    `<div class="item"><div class="info">
+      <div class="t">🔩 ${esc(p.name)}</div>
+      <div class="d">${fmtDate(p.date)}${p.note? " • "+esc(p.note):""}</div>
+    </div><div class="cost">${money(p.cost)}</div>
+    <button class="del" onclick="delItem('parts',${p.id})">🗑️</button></div>`).join("") : `<div class="empty">${t("empty_parts")}</div>`;
+}
+
+// ====== الوثائق ======
+function addDoc(){
+  const type=document.getElementById("dType").value, start=document.getElementById("dStart").value, end=document.getElementById("dEnd").value;
+  if(!start||!end) return toast(t("t_need_fields"));
+  const custom = type==="other"? document.getElementById("dCustom").value.trim() : "";
+  D().docs.unshift({id:Date.now(), type, custom, start, end, cost:Number(document.getElementById("dCost").value)||0});
+  document.getElementById("dCustom").value="";
+  document.getElementById("dCost").value="";
+  save(); toast(t("t_saved")); render();
+}
+function renderDocs(){
+  const list=[...D().docs].sort((a,b)=>new Date(a.end)-new Date(b.end));
+  document.getElementById("docsList").innerHTML = list.length? list.map(d=>{
+    const left=daysBetween(today(), d.end);
+    const badge = left<0? `<span class="badge b-red">${tp("b_expired",-left)}</span>`
+      : left<=30? `<span class="badge b-red">${tp("b_days1",left)}</span>`
+      : left<=60? `<span class="badge b-yel">${tp("b_days2",left)}</span>`
+      : `<span class="badge b-grn">${tp("b_valid",left)}</span>`;
+    return `<div class="item"><div class="info">
+      <div class="t">${esc(entryDocLabel(d))} ${badge}</div>
+      <div class="d">${fmtDate(d.start)} ← ${fmtDate(d.end)}</div>
+    </div><div class="cost">${money(d.cost)}</div>
+    <button class="del" onclick="delItem('docs',${d.id})">🗑️</button></div>`;
+  }).join("") : `<div class="empty">${t("empty_docs")}</div>`;
+}
+
+// ====== التنبيهات ======
+function renderReminders(){
+  const d=D(), v=vehicles.find(x=>x.id===activeId), km=v?v.km:0, now=today();
+  let html="";
+  for(const [key,cfg] of Object.entries(TYPES)){
+    if(!cfg.km) continue;
+    const last=d.maint.filter(m=>m.type===key).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    if(!last) continue;
+    const kmLeft = cfg.km - (km - (last.km||0));
+    const soon = kmLeft>0 && kmLeft<=cfg.km*0.2;
+    const overdue = kmLeft<=0;
+    const name = esc(entryTypeLabel(last));
+    if(overdue) html+=`<div class="reminder red">🚨 <b>${name}</b>: ${tp("rem_over_km",(-kmLeft).toLocaleString(loc()))}</div>`;
+    else if(soon) html+=`<div class="reminder">⚠️ ${t("rem_soon")} <b>${name}</b> (${t("rem_left")} ${kmLeft.toLocaleString(loc())} km)</div>`;
+  }
+  for(const doc of d.docs){
+    const left=daysBetween(now, doc.end);
+    if(left>=0 && left<=30) html+=`<div class="reminder">📄 <b>${esc(docLabel(doc.type))}</b> ${tp("b_days1",left)}</div>`;
+    else if(left<0) html+=`<div class="reminder red">📄 <b>${esc(docLabel(doc.type))}</b> ${t("doc_renew")}</div>`;
+  }
+  document.getElementById("remindersList").innerHTML = html || `<div class="empty">${t("empty_rem")}</div>`;
+}
+
+// ====== التقارير ======
+function monthlySum(list){
+  const m={};
+  list.forEach(x=>{ const k=x.date.slice(0,7); if(!m[k])m[k]={cost:0,liters:0}; m[k].cost+=x.cost; m[k].liters+=x.liters; });
+  return m;
+}
+function monthLbl(k){
+  const d=new Date(k+"-02T00:00:00");
+  return d.toLocaleDateString(loc(),{month:"short"})+" "+k.slice(2,4);
+}
+function barChart(elId, dataObj){
+  const keys=Object.keys(dataObj).sort().slice(-6);
+  if(!keys.length){ document.getElementById(elId).innerHTML=`<div class="empty">${t("empty_recent")}</div>`; return; }
+  const max=Math.max(...keys.map(k=>dataObj[k].cost),1);
+  document.getElementById(elId).innerHTML =
+    `<div class="bar-wrap">${keys.map(k=>`<div class="bar" style="height:${Math.max(dataObj[k].cost/max*100,3)}%"><span>${Math.round(dataObj[k].cost)}</span></div>`).join("")}</div>
+     <div class="bar-lbl">${keys.map(k=>`<div>${monthLbl(k)}</div>`).join("")}</div>
+     <p style="font-size:.75rem; color:var(--muted); margin-top:8px;">${t("total")}: ${money(keys.reduce((s,k)=>s+dataObj[k].cost,0))}</p>`;
+}
+function renderReports(){
+  barChart("fuelChart", monthlySum(D().fuel));
+  const mp={}; D().maint.forEach(x=>{const k=x.date.slice(0,7); mp[k]=(mp[k]||0)+x.cost;});
+  D().parts.forEach(x=>{const k=x.date.slice(0,7); mp[k]=(mp[k]||0)+x.cost;});
+  const obj={}; Object.keys(mp).forEach(k=>obj[k]={cost:mp[k]});
+  barChart("maintChart", obj);
+  const y=today().slice(0,4);
+  const sum=(l,f)=>l.filter(x=>x.date.startsWith(y)).reduce((s,x)=>s+f(x),0);
+  document.getElementById("yearSummary").innerHTML=`
+    <div class="grid">
+      <div class="stat"><div class="num">${money(sum(D().fuel,x=>x.cost))}</div><div class="lbl">${t("fuel_w")} ${y}</div></div>
+      <div class="stat"><div class="num">${money(sum(D().maint,x=>x.cost))}</div><div class="lbl">${t("maint_w")} ${y}</div></div>
+      <div class="stat"><div class="num">${money(sum(D().parts,x=>x.cost))}</div><div class="lbl">${t("parts_w")} ${y}</div></div>
+      <div class="stat"><div class="num">${money(sum(D().docs,x=>x.cost))}</div><div class="lbl">${t("docs_w")} ${y}</div></div>
+    </div>`;
+}
+
+// ====== الرئيسية ======
+function renderHome(){
+  const v=vehicles.find(x=>x.id===activeId), d=D();
+  document.getElementById("stKm").textContent=(v?v.km:0).toLocaleString(loc());
+  const c=consumption();
+  document.getElementById("stKmL").textContent=c? c.toFixed(1) : "—";
+  const month=today().slice(0,7);
+  document.getElementById("stFuelMonth").textContent=money(d.fuel.filter(x=>x.date.startsWith(month)).reduce((s,x)=>s+x.cost,0));
+  document.getElementById("stMaint").textContent=d.maint.length;
+  const all=[...d.maint.map(m=>({date:m.date,t:(TYPES[m.type]||TYPES.other).ic+" "+entryTypeLabel(m),c:m.cost})),
+    ...d.fuel.map(f=>({date:f.date,t:t("fuel_one"),c:f.cost})),
+    ...d.parts.map(p=>({date:p.date,t:"🔩 "+p.name,c:p.cost})),
+    ...d.docs.map(x=>({date:x.start,t:entryDocLabel(x),c:x.cost}))];
+  all.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("recentList").innerHTML = all.length? all.slice(0,6).map(x=>
+    `<div class="item"><div class="info"><div class="t">${esc(x.t)}</div><div class="d">${fmtDate(x.date)}</div></div><div class="cost">${money(x.c)}</div></div>`).join("")
+    : `<div class="empty">${t("empty_recent")}</div>`;
+}
+
+// ====== عام ======
+function delItem(cat,id){ D()[cat]=D()[cat].filter(x=>x.id!==id); save(); render(); }
+function render(){
+  const noVeh = vehicles.length===0;
+  document.getElementById("welcomeBox").style.display = noVeh? "block":"none";
+  document.getElementById("homeContent").style.display = noVeh? "none":"block";
+  document.getElementById("langCard").style.display = (!lang)? "block":"none";
+  if(!activeId){ renderVehicleSel(); return; }
+  renderVehicleSel(); renderHome(); renderReminders(); renderMaint(); renderFuel(); renderParts(); renderDocs(); renderReports();
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({vehicles,data},null,1)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="car-care-backup-"+today()+".json"; a.click();
+  toast(t("t_exp"));
+}
+function importData(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const j=JSON.parse(r.result); vehicles=j.vehicles; data=j.data; activeId=vehicles[0]?.id; save(); renderVehicleSel(); render(); toast(t("t_imp_ok")); }catch{ toast(t("t_imp_bad")); } };
+  r.readAsText(f);
+}
+function clearAll(){
+  if(confirm(t("confirm_clear"))){
+    vehicles=[]; data={}; activeId=null; localStorage.removeItem(KEYS.vehicles); localStorage.removeItem(KEYS.data);
+    renderVehicleSel(); render(); toast(t("t_del"));
+  }
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute("data-theme")==="dark"?"":"dark";
+  document.documentElement.setAttribute("data-theme",cur);
+  localStorage.setItem(KEYS.theme,cur);
+  document.getElementById("themeBtn").textContent = cur==="dark"?"☀️":"🌙";
+}
+// ====== تهيئة ======
+(function init(){
+  if(localStorage.getItem(KEYS.theme)==="dark"){ document.documentElement.setAttribute("data-theme","dark"); document.getElementById("themeBtn").textContent="☀️"; }
+  if(!lang){ lang="ar"; } // العربية افتراضياً، مع إبقاء بطاقة الاختيار ظاهرة عند أول فتح
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==="ar" ? "rtl" : "ltr";
+  document.getElementById("langSel").value = lang;
+  document.getElementById("curSel").value = currency;
+  applyLang();
+  ["mDate","fDate","pDate","dStart"].forEach(id=>document.getElementById(id).value=today());
+  renderVehicleSel(); render();
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>
