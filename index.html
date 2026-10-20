@@ -4,12 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1565c0">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>🚗 صيانة سيارتي</title>
+<title>🚗 ToMobilti</title>
 <style>
 :root{
   --bg:#f4f6f9; --card:#ffffff; --text:#1a1a2e; --muted:#6b7280;
@@ -73,7 +68,15 @@ nav button.active{color:var(--primary); font-weight:bold;}
 .toast{position:fixed; bottom:80px; right:50%; transform:translateX(50%); background:#333; color:#fff; padding:10px 22px; border-radius:24px; font-size:.88rem; opacity:0; transition:.3s; z-index:99; pointer-events:none;}
 .toast.show{opacity:1;}
 h2.sec-title{font-size:1rem; margin:4px 0 10px;}
+.km-btns{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+.km-btn{background:var(--primary); color:#fff; border:none; border-radius:10px; padding:12px 0; font-size:1rem; font-weight:bold; cursor:pointer;}
+.km-btn:active{transform:scale(.94); background:var(--primary-d);}
+.toon-row{display:flex; justify-content:center; gap:16px; padding:4px 0 10px;}
+.toon-row svg{filter:drop-shadow(0 3px 4px rgba(0,0,0,.15));}
+.toon-row.sm svg{width:40px; height:40px;}
 .lang-row{display:flex; gap:8px; margin-top:10px;}
+.chk{display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--text); margin-top:10px; cursor:pointer;}
+.chk input{width:18px; height:18px; accent-color:var(--primary); flex-shrink:0;}
 .lang-row .btn{margin-top:0; padding:10px 4px; font-size:.9rem;}
 </style>
 </head>
@@ -101,8 +104,8 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
         </div>
       </div>
       <div class="card" style="text-align:center; padding:26px 18px;">
-        <div style="font-size:3rem; margin-bottom:6px;">🚗</div>
-        <h3 style="justify-content:center; font-size:1.1rem;" data-i18n="welcome_t">أهلاً بك في "صيانة سيارتي"!</h3>
+        <div class="toon-row" id="toonWelcome"></div>
+        <h3 style="justify-content:center; font-size:1.1rem;" data-i18n="welcome_t">أهلاً بك في ToMobilti!</h3>
         <p style="font-size:.85rem; color:var(--muted); margin-bottom:4px;" data-i18n="welcome_p">لنبدأ — أضف سيارتك الأولى:</p>
         <label style="text-align:start;" data-i18n="lb_vname">اسم السيارة / الموديل</label>
         <input type="text" id="wName" data-i18n-ph="ph_vname">
@@ -121,6 +124,16 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
       <div class="stat"><div class="num" id="stFuelMonth">0</div><div class="lbl" data-i18n="st_fuel_month">وقود هذا الشهر</div></div>
       <div class="stat"><div class="num" id="stMaint">0</div><div class="lbl" data-i18n="st_maint">عملية صيانة مسجلة</div></div>
     </div>
+    <div class="card" style="margin-top:12px;">
+      <h3 data-i18n="quick_km">⚡ تحديث سريع للمسافة</h3>
+      <div class="km-btns">
+        <button class="km-btn" onclick="quickAddKm(1)">+1</button>
+        <button class="km-btn" onclick="quickAddKm(10)">+10</button>
+        <button class="km-btn" onclick="quickAddKm(100)">+100</button>
+        <button class="km-btn" onclick="quickAddKm(1000)">+1000</button>
+      </div>
+    </div>
+    <div class="toon-row sm" id="toonDash"></div>
     <div class="card" style="margin-top:12px;">
       <h3 data-i18n="rem_title">🔔 تنبيهات قريبة</h3>
       <div id="remindersList"></div>
@@ -142,6 +155,7 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
       <input type="text" id="mCustom" style="display:none; margin-top:6px;" data-i18n-ph="ph_custom" placeholder="✍️ اكتب ما تم تغييره...">
       <label data-i18n="lb_date">التاريخ</label><input type="date" id="mDate">
       <label data-i18n="lb_km">عداد المسافة (كم)</label><input type="number" id="mKm" data-i18n-ph="ph_km">
+      <label class="chk"><input type="checkbox" id="mFuture"> <span data-i18n="future_chk">🎯 تنبيه مستقبلي: نبّهني عندما يصل العداد لهذه الكيلومترات</span></label>
       <label data-i18n="lb_cost">التكلفة</label><input type="number" id="mCost" data-i18n-ph="ph_cost">
       <label data-i18n="lb_notes">ملاحظات (اختياري)</label><input type="text" id="mNote">
       <button class="btn" onclick="addMaint()" data-i18n="btn_save">💾 حفظ</button>
@@ -155,9 +169,7 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
     <div class="card">
       <h3 data-i18n="add_op">➕ إضافة عملية</h3>
       <label data-i18n="lb_date">التاريخ</label><input type="date" id="fDate">
-      <label data-i18n="lb_km">عداد المسافة (كم)</label><input type="number" id="fKm" data-i18n-ph="ph_km">
-      <label data-i18n="lb_liters">عدد اللترات</label><input type="number" step="0.01" id="fLiters" data-i18n-ph="ph_liters">
-      <label data-i18n="lb_total">المبلغ الإجمالي</label><input type="number" step="0.01" id="fCost" data-i18n-ph="ph_cost">
+      <label data-i18n="lb_total">مبلغ الوقود المعبأ</label><input type="number" step="0.01" id="fCost" data-i18n-ph="ph_cost">
       <button class="btn" onclick="addFuel()" data-i18n="btn_save">💾 حفظ</button>
     </div>
     <div id="fuelList"></div>
@@ -271,7 +283,7 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
 // ====== اللغات ======
 const STR = {
 ar:{
- appName:"صيانة سيارتي", nav_home:"الرئيسية", nav_maint:"الصيانة", nav_fuel:"الوقود", nav_parts:"القطع",
+ appName:"ToMobilti", nav_home:"الرئيسية", nav_maint:"الصيانة", nav_fuel:"الوقود", nav_parts:"القطع",
  nav_docs:"الوثائق", nav_reports:"التقارير", nav_settings:"الإعدادات",
  dash_title:"📊 لوحة التحكم", st_km:"المسافة الحالية (كم)", st_conso:"متوسط الاستهلاك (ل/100كم)",
  st_fuel_month:"وقود هذا الشهر", st_maint:"عملية صيانة مسجلة", rem_title:"🔔 تنبيهات قريبة",
@@ -286,9 +298,9 @@ ar:{
  add_v_t:"➕ إضافة سيارة أخرى", add_v_btn:"💾 إضافة", lb_vname:"الاسم / الموديل", lb_plate:"رقم اللوحة (اختياري)",
  lb_vkm:"المسافة الحالية (كم)", cur_t:"💵 العملة", cur_lb:"اختر عملتك — ستظهر بجانب كل الأثمنة",
  backup_t:"💾 النسخ الاحتياطي", exp:"📤 تصدير البيانات", imp:"📥 استيراد بيانات", clear_all:"🗑️ حذف جميع البيانات",
- welcome_t:'أهلاً بك في "صيانة سيارتي"!', welcome_p:"لنبدأ — أضف سيارتك الأولى:", w_start:"🚀 ابدأ الآن",
+ welcome_t:'أهلاً بك في ToMobilti!', welcome_p:"لنبدأ — أضف سيارتك الأولى:", w_start:"🚀 ابدأ الآن",
  ph_vname:"مثال: داسيا لوغان 2020", ph_plate:"مثال: أ 12345", ph_km:"مثال: 45000", ph_cost:"0",
- ph_liters:"مثال: 35", ph_part:"مثال: فلتر الهواء", ph_custom:"✍️ اكتب النوع يدوياً...",
+ ph_liters:"مثال: 35", ph_part:"مثال: فلتر الهواء", ph_custom:"✍️ اكتب النوع يدوياً...", quick_km:"⚡ تحديث سريع للمسافة", future_chk:"🎯 تنبيه مستقبلي: نبّهني عندما يصل العداد لهذه الكيلومترات",
  empty_maint:"لا توجد عمليات صيانة", empty_fuel:"لا توجد تعبئات وقود", empty_parts:"لا توجد قطع مسجلة", empty_docs:"لا توجد وثائق",
  per_liter:"/لتر", total:"المجموع",
  t_need_date:"⚠️ أدخل التاريخ", t_need_fields:"⚠️ أكمل الحقول المطلوبة", t_saved:"✅ تم الحفظ",
@@ -302,7 +314,7 @@ ar:{
  fuel_w:"وقود", maint_w:"صيانة", parts_w:"قطع", docs_w:"وثائق", fuel_one:"⛽ وقود"
 },
 fr:{
- appName:"Ma Voiture", nav_home:"Accueil", nav_maint:"Entretien", nav_fuel:"Carburant", nav_parts:"Pièces",
+ appName:"ToMobilti", nav_home:"Accueil", nav_maint:"Entretien", nav_fuel:"Carburant", nav_parts:"Pièces",
  nav_docs:"Documents", nav_reports:"Rapports", nav_settings:"Réglages",
  dash_title:"📊 Tableau de bord", st_km:"Distance actuelle (km)", st_conso:"Conso. moyenne (L/100km)",
  st_fuel_month:"Carburant ce mois", st_maint:"Entretiens enregistrés", rem_title:"🔔 Alertes proches",
@@ -317,9 +329,9 @@ fr:{
  add_v_t:"➕ Ajouter un autre véhicule", add_v_btn:"💾 Ajouter", lb_vname:"Nom / Modèle", lb_plate:"Plaque (optionnel)",
  lb_vkm:"Compteur actuel (km)", cur_t:"💵 Devise", cur_lb:"Choisissez votre devise — affichée à côté de tous les prix",
  backup_t:"💾 Sauvegarde", exp:"📤 Exporter les données", imp:"📥 Importer des données", clear_all:"🗑️ Tout supprimer",
- welcome_t:'Bienvenue dans "Ma Voiture" !', welcome_p:"Commençons — ajoutez votre premier véhicule :", w_start:"🚀 Commencer",
+ welcome_t:'Bienvenue dans ToMobilti !', welcome_p:"Commençons — ajoutez votre premier véhicule :", w_start:"🚀 Commencer",
  ph_vname:"Ex : Dacia Logan 2020", ph_plate:"Ex : 12345-A-6", ph_km:"Ex : 45000", ph_cost:"0",
- ph_liters:"Ex : 35", ph_part:"Ex : Filtre à air", ph_custom:"✍️ Écrivez le type...",
+ ph_liters:"Ex : 35", ph_part:"Ex : Filtre à air", ph_custom:"✍️ Écrivez le type...", quick_km:"⚡ Mise à jour rapide du compteur", future_chk:"🎯 Alerte future : prévenez-moi à ce kilométrage",
  empty_maint:"Aucun entretien", empty_fuel:"Aucun plein enregistré", empty_parts:"Aucune pièce enregistrée", empty_docs:"Aucun document",
  per_liter:"/L", total:"Total",
  t_need_date:"⚠️ Entrez la date", t_need_fields:"⚠️ Remplissez les champs requis", t_saved:"✅ Enregistré",
@@ -333,7 +345,7 @@ fr:{
  fuel_w:"Carburant", maint_w:"Entretien", parts_w:"Pièces", docs_w:"Documents", fuel_one:"⛽ Carburant"
 },
 en:{
- appName:"My Car Care", nav_home:"Home", nav_maint:"Maintenance", nav_fuel:"Fuel", nav_parts:"Parts",
+ appName:"ToMobilti", nav_home:"Home", nav_maint:"Maintenance", nav_fuel:"Fuel", nav_parts:"Parts",
  nav_docs:"Documents", nav_reports:"Reports", nav_settings:"Settings",
  dash_title:"📊 Dashboard", st_km:"Current mileage (km)", st_conso:"Avg. consumption (L/100km)",
  st_fuel_month:"Fuel this month", st_maint:"Maintenance records", rem_title:"🔔 Upcoming alerts",
@@ -348,9 +360,9 @@ en:{
  add_v_t:"➕ Add another vehicle", add_v_btn:"💾 Add", lb_vname:"Name / Model", lb_plate:"Plate no. (optional)",
  lb_vkm:"Current mileage (km)", cur_t:"💵 Currency", cur_lb:"Choose your currency — shown next to all prices",
  backup_t:"💾 Backup", exp:"📤 Export data", imp:"📥 Import data", clear_all:"🗑️ Delete all data",
- welcome_t:'Welcome to "My Car Care"!', welcome_p:"Let's start — add your first vehicle:", w_start:"🚀 Start now",
+ welcome_t:'Welcome to ToMobilti!', welcome_p:"Let's start — add your first vehicle:", w_start:"🚀 Start now",
  ph_vname:"E.g. Dacia Logan 2020", ph_plate:"E.g. 12345-A-6", ph_km:"E.g. 45000", ph_cost:"0",
- ph_liters:"E.g. 35", ph_part:"E.g. Air filter", ph_custom:"✍️ Type it manually...",
+ ph_liters:"E.g. 35", ph_part:"E.g. Air filter", ph_custom:"✍️ Type it manually...", quick_km:"⚡ Quick mileage update", future_chk:"🎯 Future alert: notify me when the odometer reaches this",
  empty_maint:"No maintenance records", empty_fuel:"No fuel entries", empty_parts:"No parts recorded", empty_docs:"No documents",
  per_liter:"/L", total:"Total",
  t_need_date:"⚠️ Enter the date", t_need_fields:"⚠️ Fill in the required fields", t_saved:"✅ Saved",
@@ -430,6 +442,24 @@ function daysBetween(a,b){ return Math.floor((new Date(b)-new Date(a))/86400000)
 function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function typeLabel(k){ return TYPES[k]? TYPES[k][lang]||TYPES[k].ar : k; }
 function docLabel(k){ return DOCS[k]? DOCS[k][lang]||DOCS[k].ar : k; }
+
+// ====== الصور الكرتونية ======
+const TOONS = {
+oil:`<svg viewBox="0 0 64 64" width="56" height="56"><rect x="25" y="5" width="14" height="7" rx="2" fill="#455a64"/><path d="M23 12h18v5l5 7v25a7 7 0 0 1-7 7H25a7 7 0 0 1-7-7V24l5-7z" fill="#ffb300"/><rect x="23" y="28" width="18" height="15" rx="2" fill="#fffde7"/><path d="M32 30c3.5 4.5 4.5 7 0 10.5-4.5-3.5-3.5-6 0-10.5z" fill="#1565c0"/><rect x="27" y="43" width="10" height="2.5" rx="1" fill="#e65100"/></svg>`,
+engine:`<svg viewBox="0 0 64 64" width="56" height="56"><rect x="8" y="24" width="48" height="24" rx="4" fill="#78909c"/><rect x="14" y="16" width="22" height="10" rx="2" fill="#546e7a"/><rect x="40" y="14" width="6" height="12" rx="2" fill="#546e7a"/><rect x="12" y="48" width="40" height="5" rx="2" fill="#455a64"/><circle cx="45" cy="36" r="7.5" fill="#37474f"/><circle cx="45" cy="36" r="3" fill="#90a4ae"/><line x1="12" y1="31" x2="26" y2="31" stroke="#546e7a" stroke-width="2.5"/><line x1="12" y1="37" x2="26" y2="37" stroke="#546e7a" stroke-width="2.5"/><circle cx="16" cy="24" r="2" fill="#37474f"/><circle cx="22" cy="24" r="2" fill="#37474f"/></svg>`,
+wheel:`<svg viewBox="0 0 64 64" width="56" height="56"><circle cx="32" cy="32" r="23" fill="#37474f"/><circle cx="32" cy="32" r="16" fill="none" stroke="#263238" stroke-width="2" stroke-dasharray="4 3"/><circle cx="32" cy="32" r="12" fill="#cfd8dc"/><circle cx="32" cy="32" r="4.5" fill="#546e7a"/><g stroke="#546e7a" stroke-width="2.5"><line x1="32" y1="22" x2="32" y2="26"/><line x1="32" y1="38" x2="32" y2="42"/><line x1="22" y1="32" x2="26" y2="32"/><line x1="38" y1="32" x2="42" y2="32"/><line x1="25" y1="25" x2="27.5" y2="27.5"/><line x1="36.5" y1="36.5" x2="39" y2="39"/><line x1="39" y1="25" x2="36.5" y2="27.5"/><line x1="27.5" y1="36.5" x2="25" y2="39"/></g></svg>`,
+doc:`<svg viewBox="0 0 64 64" width="56" height="56"><path d="M18 8h20l8 8v34a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z" fill="#ffffff" stroke="#90a4ae" stroke-width="2"/><path d="M38 8v8h8" fill="#eceff1" stroke="#90a4ae" stroke-width="2"/><g stroke="#b0bec5" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="26" x2="40" y2="26"/><line x1="22" y1="33" x2="40" y2="33"/><line x1="22" y1="40" x2="34" y2="40"/></g><circle cx="38" cy="47" r="5" fill="#d32f2f"/><path d="M35.8 47l1.8 1.8 3-3.2" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`
+};
+function fillToons(){
+  const row = TOONS.oil + TOONS.engine + TOONS.wheel + TOONS.doc;
+  const w = document.getElementById("toonWelcome"); if(w) w.innerHTML = row;
+  const d = document.getElementById("toonDash"); if(d) d.innerHTML = row;
+}
+function quickAddKm(n){
+  const v = vehicles.find(x=>x.id===activeId); if(!v) return;
+  v.km = (v.km||0) + n; save(); render(); toast("+" + n + " km ✓");
+}
+
 function toggleCustom(selId, inpId){
   const show = document.getElementById(selId).value === "other";
   const inp = document.getElementById(inpId);
@@ -486,9 +516,9 @@ function addMaint(){
   if(!date) return toast(t("t_need_date"));
   const km=Number(document.getElementById("mKm").value);
   const custom = type==="other"? document.getElementById("mCustom").value.trim() : "";
-  D().maint.unshift({id:Date.now(), type, custom, date, km, cost:Number(document.getElementById("mCost").value)||0, note:document.getElementById("mNote").value.trim()});
-  const v=vehicles.find(x=>x.id===activeId); if(v&&km>v.km){v.km=km;}
-  document.getElementById("mCost").value=""; document.getElementById("mNote").value=""; document.getElementById("mKm").value="";
+  const future = document.getElementById("mFuture").checked;
+  D().maint.unshift({id:Date.now(), type, custom, future, date, km, cost:Number(document.getElementById("mCost").value)||0, note:document.getElementById("mNote").value.trim()});
+  document.getElementById("mCost").value=""; document.getElementById("mNote").value=""; document.getElementById("mKm").value=""; document.getElementById("mFuture").checked=false;
   save(); toast(t("t_saved")); render();
 }
 function renderMaint(){
@@ -496,7 +526,7 @@ function renderMaint(){
   document.getElementById("maintList").innerHTML = list.length? list.map(m=>{
     const cfg=TYPES[m.type]||TYPES.other;
     return `<div class="item"><div class="info">
-      <div class="t">${cfg.ic} ${esc(entryTypeLabel(m))}</div>
+      <div class="t">${cfg.ic} ${esc(entryTypeLabel(m))} ${m.future? '<span class="badge b-yel">🎯 عند '+m.km.toLocaleString(loc())+' km</span>':""}</div>
       <div class="d">${fmtDate(m.date)}${m.km? " • "+m.km.toLocaleString(loc())+" km":""}${m.note? " • "+esc(m.note):""}</div>
     </div><div class="cost">${money(m.cost)}</div>
     <button class="del" onclick="delItem('maint',${m.id})">🗑️</button></div>`;
@@ -505,20 +535,19 @@ function renderMaint(){
 
 // ====== الوقود ======
 function addFuel(){
-  const date=document.getElementById("fDate").value, km=Number(document.getElementById("fKm").value), L=Number(document.getElementById("fLiters").value), cost=Number(document.getElementById("fCost").value);
-  if(!date||!L||!cost) return toast(t("t_need_fields"));
-  D().fuel.unshift({id:Date.now(), date, km, liters:L, cost});
+  const date=document.getElementById("fDate").value, cost=Number(document.getElementById("fCost").value);
+  if(!date||!cost) return toast(t("t_need_fields"));
+  D().fuel.unshift({id:Date.now(), date, km:0, liters:0, cost});
   D().fuel.sort((a,b)=> new Date(a.date)-new Date(b.date));
-  const v=vehicles.find(x=>x.id===activeId); if(v&&km>v.km){v.km=km;}
-  document.getElementById("fLiters").value=""; document.getElementById("fCost").value=""; document.getElementById("fKm").value="";
+  document.getElementById("fCost").value="";
   save(); toast(t("t_saved")); render();
 }
 function renderFuel(){
   const list=[...D().fuel].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("fuelList").innerHTML = list.length? list.map(f=>
     `<div class="item"><div class="info">
-      <div class="t">⛽ ${f.liters} L</div>
-      <div class="d">${fmtDate(f.date)}${f.km? " • "+f.km.toLocaleString(loc())+" km":""} • ${(f.cost/f.liters).toFixed(2)} ${t("per_liter")}</div>
+      <div class="t">⛽ ${f.liters? f.liters+" L" : ""}</div>
+      <div class="d">${fmtDate(f.date)}${f.liters? " • "+(f.cost/f.liters).toFixed(2)+" "+t("per_liter"):""}</div>
     </div><div class="cost">${money(f.cost)}</div>
     <button class="del" onclick="delItem('fuel',${f.id})">🗑️</button></div>`).join("") : `<div class="empty">${t("empty_fuel")}</div>`;
 }
@@ -577,12 +606,35 @@ function renderDocs(){
 }
 
 // ====== التنبيهات ======
+
+// ====== المنبه الصوتي ======
+const alarmed = new Set();
+function playAlarm(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    const ctx = playAlarm._ctx || (playAlarm._ctx = new AC());
+    if(ctx.state === "suspended") ctx.resume();
+    [0, 280, 560].forEach(del=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square"; o.frequency.value = 800;
+      o.connect(g); g.connect(ctx.destination);
+      const s = ctx.currentTime + del/1000;
+      g.gain.setValueAtTime(0.001, s);
+      g.gain.exponentialRampToValueAtTime(0.2, s+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, s+0.22);
+      o.start(s); o.stop(s+0.25);
+    });
+  }catch(e){}
+}
+function ring(id){ if(alarmed.has(id)) return; alarmed.add(id); playAlarm(); }
+
 function renderReminders(){
   const d=D(), v=vehicles.find(x=>x.id===activeId), km=v?v.km:0, now=today();
   let html="";
   for(const [key,cfg] of Object.entries(TYPES)){
     if(!cfg.km) continue;
-    const last=d.maint.filter(m=>m.type===key).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    const last=d.maint.filter(m=>m.type===key && !m.future).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
     if(!last) continue;
     const kmLeft = cfg.km - (km - (last.km||0));
     const soon = kmLeft>0 && kmLeft<=cfg.km*0.2;
@@ -590,11 +642,20 @@ function renderReminders(){
     const name = esc(entryTypeLabel(last));
     if(overdue) html+=`<div class="reminder red">🚨 <b>${name}</b>: ${tp("rem_over_km",(-kmLeft).toLocaleString(loc()))}</div>`;
     else if(soon) html+=`<div class="reminder">⚠️ ${t("rem_soon")} <b>${name}</b> (${t("rem_left")} ${kmLeft.toLocaleString(loc())} km)</div>`;
+    if(overdue || kmLeft<=500) ring("m"+last.id);
+  }
+  for(const m of d.maint.filter(x=>x.future && x.km)){
+    const left = m.km - km;
+    const nm = esc(entryTypeLabel(m));
+    if(left<=0) html+=`<div class="reminder red">🎯 <b>${nm}</b>: ${tp("rem_over_km",(-left).toLocaleString(loc()))}</div>`;
+    else html+=`<div class="reminder">🎯 <b>${nm}</b> (${t("rem_left")} ${left.toLocaleString(loc())} km)</div>`;
+    if(left<=500) ring("f"+m.id);
   }
   for(const doc of d.docs){
     const left=daysBetween(now, doc.end);
     if(left>=0 && left<=30) html+=`<div class="reminder">📄 <b>${esc(docLabel(doc.type))}</b> ${tp("b_days1",left)}</div>`;
     else if(left<0) html+=`<div class="reminder red">📄 <b>${esc(docLabel(doc.type))}</b> ${t("doc_renew")}</div>`;
+    if(left<=2) ring("d"+doc.id);
   }
   document.getElementById("remindersList").innerHTML = html || `<div class="empty">${t("empty_rem")}</div>`;
 }
@@ -696,12 +757,9 @@ function toggleTheme(){
   document.documentElement.dir = lang==="ar" ? "rtl" : "ltr";
   document.getElementById("langSel").value = lang;
   document.getElementById("curSel").value = currency;
-  applyLang();
+  applyLang(); fillToons();
   ["mDate","fDate","pDate","dStart"].forEach(id=>document.getElementById(id).value=today());
   renderVehicleSel(); render();
-  if("serviceWorker" in navigator && location.protocol.startsWith("http")){
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
-  }
 })();
 </script>
 </body>

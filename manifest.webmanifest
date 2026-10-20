@@ -1,7 +1,7 @@
 {
- "name": "صيانة سيارتي",
- "short_name": "صيانة سيارتي",
- "description": "تتبع صيانة سيارتك، الوقود، القطع والوثائق مع تنبيهات ذكية",
+ "name": "ToMobilti",
+ "short_name": "ToMobilti",
+ "description": "تتبع صيانة سيارتك، الوقود، القطع والوثائق مع تنبيهات ذكية • Suivi voiture",
  "start_url": "./index.html",
  "scope": "./",
  "display": "standalone",
