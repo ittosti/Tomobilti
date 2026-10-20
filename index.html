@@ -79,6 +79,7 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
 .chk input{width:18px; height:18px; accent-color:var(--primary); flex-shrink:0;}
 .lang-row .btn{margin-top:0; padding:10px 4px; font-size:.9rem;}
 </style>
+<link rel="manifest" href="./manifest.webmanifest">
 </head>
 <body>
 <header>
@@ -760,6 +761,16 @@ function toggleTheme(){
   applyLang(); fillToons();
   ["mDate","fDate","pDate","dStart"].forEach(id=>document.getElementById(id).value=today());
   renderVehicleSel(); render();
+})();
+</script>
+
+<script>
+(() => {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => console.error("ToMobilti service worker:", error));
+  });
 })();
 </script>
 </body>
