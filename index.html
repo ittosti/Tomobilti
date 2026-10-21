@@ -79,7 +79,6 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
 .chk input{width:18px; height:18px; accent-color:var(--primary); flex-shrink:0;}
 .lang-row .btn{margin-top:0; padding:10px 4px; font-size:.9rem;}
 </style>
-<link rel="manifest" href="./manifest.webmanifest">
 </head>
 <body>
 <header>
@@ -162,6 +161,11 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
       <button class="btn" onclick="addMaint()" data-i18n="btn_save">💾 حفظ</button>
     </div>
     <div id="maintList"></div>
+    <details class="card" style="margin-top:12px;">
+      <summary style="cursor:pointer;font-weight:700;padding:4px 0;">🗄️ أرشيف الصيانة السابقة</summary>
+      <p style="font-size:.85rem;color:var(--muted,#666);margin:8px 0;">العمليات السابقة محفوظة هنا ولا تدخل ضمن التنبيهات النشطة.</p>
+      <div id="maintArchiveList"></div>
+    </details>
   </section>
 
   <!-- الوقود -->
@@ -181,7 +185,7 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
     <h2 class="sec-title" data-i18n="parts_title">🔩 سجل القطع</h2>
     <div class="card">
       <h3 data-i18n="add_op">➕ إضافة عملية</h3>
-      <label data-i18n="lb_part_name">اسم القطعة</label><input type="text" id="pName" data-i18n-ph="ph_part">
+      <label data-i18n="lb_part_name">اسم القطعة</label><input type="text" id="pName" list="partChoices" data-i18n-ph="ph_part"><datalist id="partChoices"></datalist>
       <label data-i18n="lb_date">التاريخ</label><input type="date" id="pDate">
       <label data-i18n="lb_cost">الثمن</label><input type="number" id="pCost" data-i18n-ph="ph_cost">
       <label data-i18n="lb_notes">ملاحظات (اختياري)</label><input type="text" id="pNote">
@@ -209,6 +213,18 @@ h2.sec-title{font-size:1rem; margin:4px 0 10px;}
   <!-- التقارير -->
   <section id="reports">
     <h2 class="sec-title" data-i18n="rep_title">📈 التقارير</h2>
+    <div class="card">
+      <h3>🗓️ تحديد فترة التقرير</h3>
+      <label for="reportPeriod">نوع التقرير</label>
+      <select id="reportPeriod" onchange="applyReportPeriod()">
+        <option value="day">يومي</option><option value="week">أسبوعي</option><option value="month" selected>شهري</option><option value="year">سنوي</option><option value="custom">فترة مخصصة</option>
+      </select>
+      <div class="grid" style="margin-top:8px">
+        <div><label for="reportFrom">من تاريخ</label><input type="date" id="reportFrom" onchange="renderReports()"></div>
+        <div><label for="reportTo">إلى تاريخ</label><input type="date" id="reportTo" onchange="renderReports()"></div>
+      </div>
+      <div id="reportRangeSummary" style="margin-top:10px"></div>
+    </div>
     <div class="card">
       <h3 data-i18n="fuel_chart_t">💰 مصاريف الوقود الشهرية</h3>
       <div id="fuelChart"></div>
@@ -467,10 +483,13 @@ function toggleCustom(selId, inpId){
   inp.style.display = show? "block":"none";
   if(show) inp.focus();
 }
-function entryTypeLabel(m){ return (m.type==="other" && m.custom)? m.custom : typeLabel(m.type); }
-function entryDocLabel(d){ return (d.type==="other" && d.custom)? d.custom : docLabel(d.type); }
-function fillTypeSelect(){ document.getElementById("mType").innerHTML = Object.keys(TYPES).map(k=>`<option value="${k}">${esc(typeLabel(k))}</option>`).join(""); }
-function fillDocSelect(){ document.getElementById("dType").innerHTML = Object.keys(DOCS).map(k=>`<option value="${k}">${esc(docLabel(k))}</option>`).join(""); }
+function entryTypeLabel(m){ if(m.type==="other" && m.custom)return m.custom; if(String(m.type).startsWith("custom:"))return m.custom||customChoices("maint")[Number(m.type.split(":")[1])]||"صيانة"; return typeLabel(m.type); }
+function entryDocLabel(d){ if(d.type==="other" && d.custom)return d.custom; if(String(d.type).startsWith("custom:"))return d.custom||customChoices("docs")[Number(d.type.split(":")[1])]||"وثيقة"; return docLabel(d.type); }
+function customChoices(kind){ try{return JSON.parse(localStorage.getItem("cc_custom_"+kind)||"[]")}catch(e){return []} }
+function rememberChoice(kind,name){ name=(name||"").trim(); if(!name)return; const a=customChoices(kind); if(!a.some(x=>x.toLowerCase()===name.toLowerCase())){a.push(name);localStorage.setItem("cc_custom_"+kind,JSON.stringify(a));} }
+function fillTypeSelect(){ const el=document.getElementById("mType"); if(!el)return; const old=el.value; el.innerHTML=Object.keys(TYPES).filter(k=>k!=="other").map(k=>`<option value="${k}">${esc(typeLabel(k))}</option>`).join("")+customChoices("maint").map((n,i)=>`<option value="custom:${i}">${esc(n)}</option>`).join("")+`<option value="other">${esc(typeLabel("other"))}</option>`; if(old && [...el.options].some(o=>o.value===old))el.value=old; }
+function fillDocSelect(){ const el=document.getElementById("dType"); if(!el)return; const old=el.value; el.innerHTML=Object.keys(DOCS).filter(k=>k!=="other").map(k=>`<option value="${k}">${esc(docLabel(k))}</option>`).join("")+customChoices("docs").map((n,i)=>`<option value="custom:${i}">${esc(n)}</option>`).join("")+`<option value="other">${esc(docLabel("other"))}</option>`; if(old && [...el.options].some(o=>o.value===old))el.value=old; }
+function fillPartChoices(){const el=document.getElementById("partChoices"); if(!el)return; const names=[...new Set([...customChoices("parts"),...D().parts.map(p=>p.name).filter(Boolean)])]; el.innerHTML=names.map(n=>`<option value="${esc(n)}"></option>`).join("");}
 
 function go(id,btn){
   document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
@@ -516,14 +535,35 @@ function addMaint(){
   const date=document.getElementById("mDate").value;
   if(!date) return toast(t("t_need_date"));
   const km=Number(document.getElementById("mKm").value);
-  const custom = type==="other"? document.getElementById("mCustom").value.trim() : "";
+  let custom = type==="other"? document.getElementById("mCustom").value.trim() : (String(type).startsWith("custom:") ? customChoices("maint")[Number(type.split(":")[1])]||"" : "");
+  if(type==="other" && custom) rememberChoice("maint",custom);
   const future = document.getElementById("mFuture").checked;
-  D().maint.unshift({id:Date.now(), type, custom, future, date, km, cost:Number(document.getElementById("mCost").value)||0, note:document.getElementById("mNote").value.trim()});
+  // عند تسجيل عملية جديدة من الفئة نفسها، أرشف كل سجلات الفئة السابقة
+  // (بما فيها التنبيه المستقبلي) حتى لا تبقى تنبيهات قديمة مكررة.
+  if (!Array.isArray(D().archivedMaint)) D().archivedMaint = [];
+  const previous = D().maint.filter(m => m.type === type && !m.archived);
+  previous.forEach(m => {
+    m.archived = true;
+    m.archivedAt = new Date().toISOString();
+    // منع تكرار السجل نفسه في الأرشيف عند ترحيل بيانات قديمة.
+    if (!D().archivedMaint.some(a => String(a.id) === String(m.id))) {
+      D().archivedMaint.unshift(m);
+    }
+  });
+  D().maint = D().maint.filter(m => !(m.type === type && !m.archived));
+  D().maint.unshift({id:Date.now(), type, custom, future, date, km, cost:Number(document.getElementById("mCost").value)||0, note:document.getElementById("mNote").value.trim(), archived:false});
   document.getElementById("mCost").value=""; document.getElementById("mNote").value=""; document.getElementById("mKm").value=""; document.getElementById("mFuture").checked=false;
-  save(); toast(t("t_saved")); render();
+  save(); fillTypeSelect(); toast(t("t_saved")); render();
 }
 function renderMaint(){
-  const list=D().maint;
+  const list=D().maint.filter(m=>!m.archived);
+  const archived = [...(D().archivedMaint||[]), ...D().maint.filter(m=>m.archived)]
+    .filter((m,i,a)=>a.findIndex(x=>x.id===m.id)===i)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("maintArchiveList").innerHTML = archived.length ? archived.map(m=>{
+    const cfg=TYPES[m.type]||TYPES.other;
+    return `<div class="item"><div class="info"><div class="t">${cfg.ic} ${esc(entryTypeLabel(m))}</div><div class="d">${fmtDate(m.date)}${m.km?" • "+m.km.toLocaleString(loc())+" km":""}${m.note?" • "+esc(m.note):""}</div></div><div class="cost">${money(m.cost)}</div></div>`;
+  }).join("") : `<div class="empty">لا توجد عمليات مؤرشفة بعد</div>`;
   document.getElementById("maintList").innerHTML = list.length? list.map(m=>{
     const cfg=TYPES[m.type]||TYPES.other;
     return `<div class="item"><div class="info">
@@ -566,12 +606,12 @@ function consumption(){
 function addPart(){
   const name=document.getElementById("pName").value.trim(), date=document.getElementById("pDate").value;
   if(!name||!date) return toast(t("t_need_fields"));
-  D().parts.unshift({id:Date.now(), name, date, cost:Number(document.getElementById("pCost").value)||0, note:document.getElementById("pNote").value.trim()});
+  rememberChoice("parts",name); D().parts.unshift({id:Date.now(), name, date, cost:Number(document.getElementById("pCost").value)||0, note:document.getElementById("pNote").value.trim()});
   document.getElementById("pName").value=""; document.getElementById("pCost").value=""; document.getElementById("pNote").value="";
   save(); toast(t("t_saved")); render();
 }
 function renderParts(){
-  const list=D().parts;
+  const list=D().parts; fillPartChoices();
   document.getElementById("partsList").innerHTML = list.length? list.map(p=>
     `<div class="item"><div class="info">
       <div class="t">🔩 ${esc(p.name)}</div>
@@ -584,11 +624,12 @@ function renderParts(){
 function addDoc(){
   const type=document.getElementById("dType").value, start=document.getElementById("dStart").value, end=document.getElementById("dEnd").value;
   if(!start||!end) return toast(t("t_need_fields"));
-  const custom = type==="other"? document.getElementById("dCustom").value.trim() : "";
+  let custom = type==="other"? document.getElementById("dCustom").value.trim() : (String(type).startsWith("custom:") ? customChoices("docs")[Number(type.split(":")[1])]||"" : "");
+  if(type==="other" && custom) rememberChoice("docs",custom);
   D().docs.unshift({id:Date.now(), type, custom, start, end, cost:Number(document.getElementById("dCost").value)||0});
   document.getElementById("dCustom").value="";
   document.getElementById("dCost").value="";
-  save(); toast(t("t_saved")); render();
+  save(); fillDocSelect(); toast(t("t_saved")); render();
 }
 function renderDocs(){
   const list=[...D().docs].sort((a,b)=>new Date(a.end)-new Date(b.end));
@@ -635,7 +676,7 @@ function renderReminders(){
   let html="";
   for(const [key,cfg] of Object.entries(TYPES)){
     if(!cfg.km) continue;
-    const last=d.maint.filter(m=>m.type===key && !m.future).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    const last=d.maint.filter(m=>m.type===key && !m.future && !m.archived).sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
     if(!last) continue;
     const kmLeft = cfg.km - (km - (last.km||0));
     const soon = kmLeft>0 && kmLeft<=cfg.km*0.2;
@@ -645,7 +686,9 @@ function renderReminders(){
     else if(soon) html+=`<div class="reminder">⚠️ ${t("rem_soon")} <b>${name}</b> (${t("rem_left")} ${kmLeft.toLocaleString(loc())} km)</div>`;
     if(overdue || kmLeft<=500) ring("m"+last.id);
   }
-  for(const m of d.maint.filter(x=>x.future && x.km)){
+  // اعرض التنبيهات المستقبلية فقط إذا لم تكن الفئة نفسها قد سُجلت من جديد.
+  const activeMaintenanceTypes = new Set(d.maint.filter(x=>!x.archived && !x.future).map(x=>x.type));
+  for(const m of d.maint.filter(x=>x.future && x.km && !x.archived && !activeMaintenanceTypes.has(x.type))){
     const left = m.km - km;
     const nm = esc(entryTypeLabel(m));
     if(left<=0) html+=`<div class="reminder red">🎯 <b>${nm}</b>: ${tp("rem_over_km",(-left).toLocaleString(loc()))}</div>`;
@@ -654,8 +697,8 @@ function renderReminders(){
   }
   for(const doc of d.docs){
     const left=daysBetween(now, doc.end);
-    if(left>=0 && left<=30) html+=`<div class="reminder">📄 <b>${esc(docLabel(doc.type))}</b> ${tp("b_days1",left)}</div>`;
-    else if(left<0) html+=`<div class="reminder red">📄 <b>${esc(docLabel(doc.type))}</b> ${t("doc_renew")}</div>`;
+    if(left>=0 && left<=30) html+=`<div class="reminder">📄 <b>${esc(entryDocLabel(doc))}</b> ${tp("b_days1",left)}</div>`;
+    else if(left<0) html+=`<div class="reminder red">📄 <b>${esc(entryDocLabel(doc))}</b> ${t("doc_renew")}</div>`;
     if(left<=2) ring("d"+doc.id);
   }
   document.getElementById("remindersList").innerHTML = html || `<div class="empty">${t("empty_rem")}</div>`;
@@ -680,21 +723,27 @@ function barChart(elId, dataObj){
      <div class="bar-lbl">${keys.map(k=>`<div>${monthLbl(k)}</div>`).join("")}</div>
      <p style="font-size:.75rem; color:var(--muted); margin-top:8px;">${t("total")}: ${money(keys.reduce((s,k)=>s+dataObj[k].cost,0))}</p>`;
 }
+function applyReportPeriod(){
+  const period=document.getElementById("reportPeriod").value, now=new Date();
+  let from=new Date(now), to=new Date(now);
+  if(period==="day"){ }
+  else if(period==="week"){ const day=(now.getDay()+6)%7; from.setDate(now.getDate()-day); to=new Date(from); to.setDate(from.getDate()+6); }
+  else if(period==="month"){ from=new Date(now.getFullYear(),now.getMonth(),1); to=new Date(now.getFullYear(),now.getMonth()+1,0); }
+  else if(period==="year"){ from=new Date(now.getFullYear(),0,1); to=new Date(now.getFullYear(),11,31); }
+  else { renderReports(); return; }
+  const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  document.getElementById("reportFrom").value=iso(from); document.getElementById("reportTo").value=iso(to); renderReports();
+}
 function renderReports(){
-  barChart("fuelChart", monthlySum(D().fuel));
-  const mp={}; D().maint.forEach(x=>{const k=x.date.slice(0,7); mp[k]=(mp[k]||0)+x.cost;});
-  D().parts.forEach(x=>{const k=x.date.slice(0,7); mp[k]=(mp[k]||0)+x.cost;});
-  const obj={}; Object.keys(mp).forEach(k=>obj[k]={cost:mp[k]});
-  barChart("maintChart", obj);
-  const y=today().slice(0,4);
-  const sum=(l,f)=>l.filter(x=>x.date.startsWith(y)).reduce((s,x)=>s+f(x),0);
-  document.getElementById("yearSummary").innerHTML=`
-    <div class="grid">
-      <div class="stat"><div class="num">${money(sum(D().fuel,x=>x.cost))}</div><div class="lbl">${t("fuel_w")} ${y}</div></div>
-      <div class="stat"><div class="num">${money(sum(D().maint,x=>x.cost))}</div><div class="lbl">${t("maint_w")} ${y}</div></div>
-      <div class="stat"><div class="num">${money(sum(D().parts,x=>x.cost))}</div><div class="lbl">${t("parts_w")} ${y}</div></div>
-      <div class="stat"><div class="num">${money(sum(D().docs,x=>x.cost))}</div><div class="lbl">${t("docs_w")} ${y}</div></div>
-    </div>`;
+  const from=document.getElementById("reportFrom")?.value||"0000-01-01", to=document.getElementById("reportTo")?.value||"9999-12-31";
+  const inRange=x=>x.date>=from&&x.date<=to;
+  const fuel=D().fuel.filter(inRange), maint=D().maint.filter(inRange), parts=D().parts.filter(inRange), docs=D().docs.filter(x=>x.start>=from&&x.start<=to);
+  barChart("fuelChart", monthlySum(fuel));
+  const mp={}; maint.forEach(x=>{const k=x.date.slice(0,7);mp[k]=(mp[k]||0)+x.cost;}); parts.forEach(x=>{const k=x.date.slice(0,7);mp[k]=(mp[k]||0)+x.cost;});
+  const obj={};Object.keys(mp).forEach(k=>obj[k]={cost:mp[k]});barChart("maintChart",obj);
+  const sum=(l,f)=>l.reduce((s,x)=>s+f(x),0);
+  document.getElementById("yearSummary").innerHTML=`<div class="grid"><div class="stat"><div class="num">${money(sum(fuel,x=>x.cost))}</div><div class="lbl">${t("fuel_w")}</div></div><div class="stat"><div class="num">${money(sum(maint,x=>x.cost))}</div><div class="lbl">${t("maint_w")}</div></div><div class="stat"><div class="num">${money(sum(parts,x=>x.cost))}</div><div class="lbl">${t("parts_w")}</div></div><div class="stat"><div class="num">${money(sum(docs,x=>x.cost))}</div><div class="lbl">${t("docs_w")}</div></div></div>`;
+  document.getElementById("reportRangeSummary").innerHTML=`<b>${fmtDate(from)} — ${fmtDate(to)}</b><p>العمليات: ${fuel.length+maint.length+parts.length+docs.length} | مجموع المصاريف: ${money(sum(fuel,x=>x.cost)+sum(maint,x=>x.cost)+sum(parts,x=>x.cost)+sum(docs,x=>x.cost))}</p>`;
 }
 
 // ====== الرئيسية ======
@@ -760,17 +809,8 @@ function toggleTheme(){
   document.getElementById("curSel").value = currency;
   applyLang(); fillToons();
   ["mDate","fDate","pDate","dStart"].forEach(id=>document.getElementById(id).value=today());
+  const rf=document.getElementById("reportFrom"), rt=document.getElementById("reportTo"); if(rf&&rt){rf.value=today().slice(0,7)+"-01";rt.value=today();}
   renderVehicleSel(); render();
-})();
-</script>
-
-<script>
-(() => {
-  if (!("serviceWorker" in navigator)) return;
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js")
-      .catch(error => console.error("ToMobilti service worker:", error));
-  });
 })();
 </script>
 </body>
